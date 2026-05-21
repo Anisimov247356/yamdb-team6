@@ -11,6 +11,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# Вместо стандартной модели пользователя будет использоваться кастомная модель
+# из приложения users.
+AUTH_USER_MODEL = 'users.CustomUser'
 
 # Application definition
 
@@ -21,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'users.apps.UsersConfig',  # Регистрация приложения users.
 ]
 
 MIDDLEWARE = [
