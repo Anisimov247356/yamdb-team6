@@ -22,6 +22,12 @@ class CustomUser(AbstractUser):
         max_length=150,
         blank=True,
         verbose_name='Код подтверждения')
+    # Поле информации о пользователе:
+    bio = models.TextField(
+        blank=True,
+        max_length=256,
+        verbose_name='Биография'
+    )
 
     class Meta:
         verbose_name = 'Пользователь'
