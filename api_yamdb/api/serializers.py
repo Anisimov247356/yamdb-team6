@@ -34,19 +34,19 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    """Сериализотор для чтония произведений."""
+    """Сериализатор для чтения произведений."""
 
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
-    rating = serializers.IntegerField(read_only=True, default=None)
+    # Временно.
+    # rating = serializers.IntegerField( read_only=True, default=None,)
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'rating',
+            'id', 'name', 'year',
             'description', 'genre', 'category'
         )
-        read_only_fields = fields
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -56,20 +56,36 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
-        slug_fields='slug',
+        slug_field='slug',
         many=True
     )
     category = serializers.SlugRelatedField(
-        quryset=Category.objects.all(),
+        queryset=Category.objects.all(),
         slug_field='slug'
     )
 
     class Meta:
-        madel = Title
+        model = Title
         fields = (
-            'id', 'name', 'year', 'rating',
+            'id', 'name', 'year',
             'description', 'genre', 'category'
         )
+
+    def validate_year(self, value):
+        """Проверка года выпуска."""
+        if not isinstance(value, int):
+            raise serializers.ValidationError(
+                'Год выпуска должен быть целым числом.'
+            )
+        return value
+
+    def validate_name(self, value):
+        """Проверка длины названия."""
+        if len(value) > 256:
+            raise serializers.ValidationError(
+                'Название произведения не может быть длиннее 256 символов.'
+            )
+        return value
 
 
 class UserSerializer(CheckEmailMixin, CheckUsernameMixin,

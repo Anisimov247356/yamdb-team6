@@ -39,7 +39,7 @@ class Title(models.Model):
     """Модель произведения."""
     name = models.CharField(max_length=256)
     year = models.IntegerField()
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True)
     genre = models.ManyToManyField(
         Genre,
         related_name='titles',
@@ -50,7 +50,6 @@ class Title(models.Model):
         on_delete=models.SET_NULL,
         related_name='titles',
         null=True,
-        blank=True,
         verbose_name='Категория'
     )
 
@@ -61,8 +60,3 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-#___________________________________________
-# Здесть место для Разработчика 3
-# Нужно создать модели Review и Comment
-#___________________________________________
