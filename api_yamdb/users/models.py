@@ -6,15 +6,21 @@ from django.db import models
 
 class CustomUser(AbstractUser):
     """Модель пользователя."""
+
+    # Константа для выбора ролей — используем её в сериализаторе
+    ROLE_CHOICES = (
+        ('user', 'Пользователь'),
+        ('moderator', 'Модератор'),
+        ('admin', 'Администратор')
+    )
     # Определим поле email, как уникальное:
-    email = models.EmailField('email', max_length=254, unique=True)
+    email = models.EmailField(max_length=254, unique=True,
+                              verbose_name='email')
     # Поле для определения прав пользователей:
     role = models.CharField(
         max_length=20,
         blank=False,
-        choices=(('user', 'Пользователь'),
-                 ('moderator', 'Модератор'),
-                 ('admin', 'Администратор'),),
+        choices=ROLE_CHOICES,
         default='user',
         verbose_name='Пользовательская роль')
     # Поле для кода подтверждения:
