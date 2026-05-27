@@ -8,13 +8,16 @@ from rest_framework.mixins import CreateModelMixin
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 
-from reviews.models import Category, Genre, Title
-from .permissions import IsAdmin, IsAdminOrReadOnly
+from reviews.models import Category, Genre, Title, Review, Comment
+from .permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorModeratorOrAdmin
 from .serializers import (SignUpSerializer, TokenSerializer, UserSerializer,
                           UserMeSerializer, CategorySerializer,
                           GenreSerializer, TitleReadSerializer,
-                          TitleWriteSerializer)
+                          TitleWriteSerializer, ReviewSerializer,
+                          CommentSerializer)
 from .filters import TitleFilter
 
 
@@ -153,9 +156,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     ViewSet для управления произведениями.
     """
 
-    # queryset = Title.objects.annotate(
-    # rating=Avg('reviews__score')).order_by('name')
-    queryset = Title.objects.all().order_by('name')  # Временно.
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
     http_method_names = ['get', 'post', 'patch', 'delete']
@@ -166,3 +168,41 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('create', 'partial_update'):
             return TitleWriteSerializer
         return TitleReadSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """ViewSet для управления отзывами."""
+    serializer_class = ReviewSerializer
+    permission_classes = (IsAuthorModeratorOrAdmin,)
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """ViewSet для управления комментариями."""
+    serializer_class = CommentSerializer
+    permission_classes = (IsAuthorModeratorOrAdmin,)
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        review = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id')
+        )
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id')
+        )
+        serializer.save(author=self.request.user, review=review)

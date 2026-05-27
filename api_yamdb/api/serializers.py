@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review, Comment
 from .mixins import (CheckEmailMixin, CheckUsernameMixin,
                      SignUpValidationMixin, TokenValidationMixin)
 from .utils import generate_confirmation_code, send_confirmation_email
@@ -38,14 +38,13 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
-    # Временно.
-    # rating = serializers.IntegerField( read_only=True, default=None,)
+    rating = serializers.IntegerField( read_only=True, default=None,)
 
     class Meta:
         model = Title
         fields = (
             'id', 'name', 'year',
-            'description', 'genre', 'category'
+            'description', 'genre', 'category', 'rating'
         )
 
 
@@ -158,3 +157,40 @@ class TokenSerializer(TokenValidationMixin, serializers.Serializer):
         user = self.context['user']
         token = AccessToken.for_user(user)
         return {'token': str(token)}
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для отзывов."""
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+
+    def validate(self, data):
+        """Запрещаем повторный отзыв при создании."""
+        if self.context['request'].method == 'POST':
+            title_id = self.context['view'].kwargs.get('title_id')
+            author = self.context['request'].user
+            if Review.objects.filter(
+                title_id=title_id, author=author
+            ).exists():
+                raise serializers.ValidationError(
+                    'Вы уже оставили отзыв на это произведение.'
+                )
+        return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для комментариев."""
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'author', 'pub_date')
