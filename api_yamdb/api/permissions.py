@@ -89,10 +89,8 @@ class IsAuthorModeratorOrAdmin(BaseReadOnlyPermission):
         Проверяет аутентификацию пользователя и разрешает безопасные методы.
 
         """
-        return (
-                request.method in SAFE_METHODS
-                or request.user.is_authenticated
-        )
+        return (request.method in SAFE_METHODS
+                or request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
         """Проверяет права на уровне объекта."""
