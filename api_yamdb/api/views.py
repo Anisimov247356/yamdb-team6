@@ -22,7 +22,6 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           TokenSerializer, UserMeSerializer, UserSerializer)
 
 
-# Получаем кастомную модель пользователя:
 User = get_user_model()
 
 
@@ -72,36 +71,10 @@ class TokenViewSet(CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = TokenSerializer
 
     def create(self, request, *args, **kwargs):
-        """Переопределение метода create для отправки необходимых статусов."""
-        # Имя пользователя и код подтверждения из запроса:
         username = request.data.get('username')
-        confirmation_code = request.data.get('confirmation_code')
-
-        # Проверка наличия имя пользователя и кода подтверждения в запросе:
-        if not username:
-            return Response(
-                {'username': ['Обязательное поле.']},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if not confirmation_code:
-            return Response(
-                {'confirmation_code': ['Обязательное поле.']},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Поиск пользователя в БД:
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            return Response(
-                {'detail': 'Пользователь не найден.'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        serializer = self.get_serializer(
-            data=request.data,
-            context={'user': user},
-        )
+        get_object_or_404(User, username=username)
+        
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.save(), status=status.HTTP_200_OK)
 
@@ -178,13 +151,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     http_method_names = ['get', 'post', 'patch', 'delete']
 
+    def get_title(self):
+        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+
     def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        return title.reviews.all()
+        return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
+        serializer.save(author=self.request.user, title=self.get_title())
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -194,18 +168,15 @@ class CommentViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     http_method_names = ['get', 'post', 'patch', 'delete']
 
-    def get_queryset(self):
-        review = get_object_or_404(
+    def get_review(self):
+        return get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id'),
             title_id=self.kwargs.get('title_id')
         )
-        return review.comments.all()
+
+    def get_queryset(self):
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(
-            Review,
-            pk=self.kwargs.get('review_id'),
-            title_id=self.kwargs.get('title_id')
-        )
-        serializer.save(author=self.request.user, review=review)
+        serializer.save(author=self.request.user, review=self.get_review())

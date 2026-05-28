@@ -29,7 +29,7 @@ class CustomUser(AbstractUser):
                               verbose_name='email')
     # Поле для определения прав пользователей:
     role = models.CharField(
-        max_length=ROLE_CHOICES,
+        max_length=ROLE_MAX_LENGTH,
         blank=False,
         choices=ROLE_CHOICES,
         default=USER,

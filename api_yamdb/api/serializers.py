@@ -1,5 +1,6 @@
 """Serializers for app api."""
 
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
@@ -13,6 +14,12 @@ from .utils import generate_confirmation_code, send_confirmation_email
 
 # Получаем кастомную модель пользователя:
 User = get_user_model()
+
+
+MAX_LENGTH_NAME = 256
+MAX_LENGTH_USERNAME = 150
+MIN_SCORE = 1
+MAX_SCORE = 10
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -82,9 +89,10 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
     def validate_name(self, value):
         """Проверка длины названия."""
-        if len(value) > 256:
+        if len(value) > MAX_LENGTH_NAME:
             raise serializers.ValidationError(
-                'Название произведения не может быть длиннее 256 символов.'
+                f'Название произведения не может быть длиннее'
+                f'{MAX_LENGTH_NAME} символов.'
             )
         return value
 
@@ -148,11 +156,24 @@ class SignUpSerializer(SignUpValidationMixin,
         return user
 
 
-class TokenSerializer(TokenValidationMixin, serializers.Serializer):
+class TokenSerializer(serializers.Serializer):
     """Сериализатор выдачи токена."""
 
-    username = serializers.CharField(max_length=150)
+    username = serializers.CharField(max_length=MAX_LENGTH_USERNAME)
     confirmation_code = serializers.CharField()
+
+    def validate(self, data):
+        username = data.get('username')
+        confirmation_code = data.get('confirmation_code')
+        
+        user = User.objects.get(username=username)
+        
+        if user.confirmation_code != confirmation_code:
+            raise serializers.ValidationError(
+                {'confirmation_code': 'Неверный код подтверждения.'}
+            )
+        self.context['user'] = user
+        return data
 
     def create(self, validated_data):
         """Переопределяем метод для выдачи токена."""
@@ -167,6 +188,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True
     )
+    score = serializers.IntegerField(
+        min_value=MIN_SCORE,
+        max_value=MAX_SCORE
+    )
 
     class Meta:
         model = Review
@@ -177,9 +202,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         if self.context['request'].method == 'POST':
             title_id = self.context['view'].kwargs.get('title_id')
             author = self.context['request'].user
-            if Review.objects.filter(
-                title_id=title_id, author=author
-            ).exists():
+            title = get_object_or_404(Title, id=title_id)
+            if title.reviews.filter(author=author).exists():
                 raise serializers.ValidationError(
                     'Вы уже оставили отзыв на это произведение.'
                 )
