@@ -117,6 +117,10 @@ STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 # Указываем директорию, в которую будут сохраняться файлы писем:
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+# Домен:
+DOMAIN_NAME = 'ya.ru'
+# Email для отправки сообщений с привязкой к домену:
+DEFAULT_FROM_EMAIL = f'yamdb_team6@{DOMAIN_NAME}'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
