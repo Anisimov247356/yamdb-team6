@@ -2,11 +2,11 @@
 
 import random
 import string
-
 from django.conf import settings
 from django.core.mail import send_mail
 
 LENGTH_CODE = 8
+
 
 def generate_confirmation_code(length=LENGTH_CODE):
     """Генерация кода подтверждения."""

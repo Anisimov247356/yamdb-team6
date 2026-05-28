@@ -156,24 +156,11 @@ class SignUpSerializer(SignUpValidationMixin,
         return user
 
 
-class TokenSerializer(serializers.Serializer):
+class TokenSerializer(TokenValidationMixin, serializers.Serializer):
     """Сериализатор выдачи токена."""
 
     username = serializers.CharField(max_length=MAX_LENGTH_USERNAME)
     confirmation_code = serializers.CharField()
-
-    def validate(self, data):
-        username = data.get('username')
-        confirmation_code = data.get('confirmation_code')
-        
-        user = User.objects.get(username=username)
-        
-        if user.confirmation_code != confirmation_code:
-            raise serializers.ValidationError(
-                {'confirmation_code': 'Неверный код подтверждения.'}
-            )
-        self.context['user'] = user
-        return data
 
     def create(self, validated_data):
         """Переопределяем метод для выдачи токена."""

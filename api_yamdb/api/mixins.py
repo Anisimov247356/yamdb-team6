@@ -106,6 +106,17 @@ class TokenValidationMixin:
         username = data.get('username')
         confirmation_code = data.get('confirmation_code')
 
+        # Проверка наличия обязательных полей:
+        if not username:
+            raise serializers.ValidationError(
+                {'username': 'Обязательное поле.'}
+            )
+        if not confirmation_code:
+            raise serializers.ValidationError(
+                {'confirmation_code': 'Обязательное поле.'}
+            )
+
+        # Проверка существования пользователя:
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
@@ -113,6 +124,7 @@ class TokenValidationMixin:
                 {'username': 'Пользователь с таким username не найден.'}
             )
 
+        # Проверка кода подтверждения:
         if user.confirmation_code != confirmation_code:
             raise serializers.ValidationError(
                 {'confirmation_code': 'Неверный код подтверждения.'}

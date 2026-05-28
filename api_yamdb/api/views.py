@@ -72,8 +72,9 @@ class TokenViewSet(CreateModelMixin, viewsets.GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         username = request.data.get('username')
-        get_object_or_404(User, username=username)
-        
+        if username:
+            get_object_or_404(User, username=username)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.save(), status=status.HTTP_200_OK)
