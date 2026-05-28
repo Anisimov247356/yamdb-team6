@@ -1,24 +1,25 @@
 """ViewSet for app api."""
 
 from django.contrib.auth import get_user_model
-from rest_framework import status, viewsets, filters, mixins
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, status, viewsets
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.mixins import CreateModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.mixins import CreateModelMixin
-from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
-from django.db.models import Avg
 
-from reviews.models import Category, Genre, Title, Review
-from .permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorModeratorOrAdmin
-from .serializers import (SignUpSerializer, TokenSerializer, UserSerializer,
-                          UserMeSerializer, CategorySerializer,
-                          GenreSerializer, TitleReadSerializer,
-                          TitleWriteSerializer, ReviewSerializer,
-                          CommentSerializer)
+from reviews.models import Category, Genre, Review, Title
+
 from .filters import TitleFilter
+from .permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorModeratorOrAdmin
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, SignUpSerializer,
+                          TitleReadSerializer, TitleWriteSerializer,
+                          TokenSerializer, UserMeSerializer, UserSerializer)
 
 
 # Получаем кастомную модель пользователя:

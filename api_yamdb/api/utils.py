@@ -1,8 +1,9 @@
 """utils for app api."""
 
-from django.core.mail import send_mail
 import random
 import string
+
+from django.core.mail import send_mail
 
 
 def generate_confirmation_code(length=8):
