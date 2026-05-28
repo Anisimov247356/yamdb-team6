@@ -1,8 +1,10 @@
 """Validators for app api."""
 
-from django.contrib.auth import get_user_model
 import re
+
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
+
 
 # Получаем кастомную модель пользователя:
 User = get_user_model()

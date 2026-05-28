@@ -4,34 +4,45 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
+
+EMEIL_MAX_LENGTH = 254
+ROLE_MAX_LENGTH = 20
+CONFIRMATIN_CODE_MAX_LENGTH = 150
+BIO_MAX_LENGTH = 266
+
+
 class CustomUser(AbstractUser):
     """Модель пользователя."""
 
     # Константа для выбора ролей — используем её в сериализаторе
     ROLE_CHOICES = (
-        ('user', 'Пользователь'),
-        ('moderator', 'Модератор'),
-        ('admin', 'Администратор')
+        (USER, 'Пользователь'),
+        (MODERATOR, 'Модератор'),
+        (ADMIN, 'Администратор')
     )
     # Определим поле email, как уникальное:
-    email = models.EmailField(max_length=254, unique=True,
+    email = models.EmailField(max_length=EMEIL_MAX_LENGTH,
+                              unique=True,
                               verbose_name='email')
     # Поле для определения прав пользователей:
     role = models.CharField(
-        max_length=20,
+        max_length=ROLE_CHOICES,
         blank=False,
         choices=ROLE_CHOICES,
-        default='user',
+        default=USER,
         verbose_name='Пользовательская роль')
     # Поле для кода подтверждения:
     confirmation_code = models.CharField(
-        max_length=150,
+        max_length=CONFIRMATIN_CODE_MAX_LENGTH,
         blank=True,
         verbose_name='Код подтверждения')
     # Поле информации о пользователе:
     bio = models.TextField(
         blank=True,
-        max_length=256,
+        max_length=BIO_MAX_LENGTH,
         verbose_name='Биография'
     )
 
@@ -39,3 +50,6 @@ class CustomUser(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
+
+    def __str__(self):
+        return self.username

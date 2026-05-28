@@ -4,10 +4,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Genre, Title, Review, Comment
+from reviews.models import Category, Comment, Genre, Review, Title
+
 from .mixins import (CheckEmailMixin, CheckUsernameMixin,
                      SignUpValidationMixin, TokenValidationMixin)
 from .utils import generate_confirmation_code, send_confirmation_email
+
 
 # Получаем кастомную модель пользователя:
 User = get_user_model()

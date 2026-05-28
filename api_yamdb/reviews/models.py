@@ -5,13 +5,20 @@ from django.db import models
 User = get_user_model()
 
 
+MAX_LENGTH_NAME = 256
+MAX_LENGTH_SLUG = 50
+MAX_LENGTH_TEXT_REPR = 15
+MIN_SCORE = 1
+MAX_SCORE = 10
+
+
 class NameSlugModel(models.Model):
     """
     Абстрактная модель для категории и жанров.
     """
 
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
+    name = models.CharField(max_length=MAX_LENGTH_NAME)
+    slug = models.SlugField(unique=True, max_length=MAX_LENGTH_SLUG)
 
     class Meta:
         abstract = True
@@ -37,8 +44,11 @@ class Genre(NameSlugModel):
 
 class Title(models.Model):
     """Модель произведения."""
-    name = models.CharField(max_length=256)
-    year = models.IntegerField()
+    name = models.CharField(max_length=MAX_LENGTH_NAME)
+    year = models.PositiveSmallIntegerField(
+        db_index=True,
+        verbose_name='Год выпуска'
+    )
     description = models.TextField(blank=True)
     genre = models.ManyToManyField(
         Genre,
@@ -79,7 +89,7 @@ class Review(models.Model):
     )
     score = models.PositiveSmallIntegerField(
         'Оценка',
-        choices=[(i, i) for i in range(1, 11)]
+        choices=[(i, i) for i in range(MIN_SCORE, MAX_SCORE + 1)]
     )
     pub_date = models.DateTimeField(
         'Дата публикации',
@@ -99,7 +109,7 @@ class Review(models.Model):
         )
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:MAX_LENGTH_TEXT_REPR]
 
 
 class Comment(models.Model):
@@ -129,4 +139,4 @@ class Comment(models.Model):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:MAX_LENGTH_TEXT_REPR]
