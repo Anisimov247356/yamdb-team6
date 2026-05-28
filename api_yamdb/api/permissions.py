@@ -2,6 +2,11 @@
 
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
+USER_ROLE = 'role'
+ROLE_ADMIN = 'admin'
+ROLE_MODERATOR = 'moderator'
+AUTHOR = 'author'
+
 
 def is_admin(user):
     """
@@ -10,7 +15,7 @@ def is_admin(user):
 
     """
     return user.is_authenticated and (
-        user.is_superuser or getattr(user, 'role', None) == 'admin')
+        user.is_superuser or getattr(user, USER_ROLE, None) == ROLE_ADMIN)
 
 
 def is_moderator(user):
@@ -18,7 +23,8 @@ def is_moderator(user):
     Функция проверки: является ли пользователь модератором.
 
     """
-    return user.is_authenticated and getattr(user, 'role', None) == 'moderator'
+    return user.is_authenticated and (
+        getattr(user, USER_ROLE, None) == ROLE_MODERATOR)
 
 
 def is_authenticated_user(user):
@@ -105,5 +111,5 @@ class IsAuthorModeratorOrAdmin(BaseReadOnlyPermission):
             return True
 
         # Только автор может изменять свой объект:
-        author = getattr(obj, 'author', None)
+        author = getattr(obj, AUTHOR, None)
         return author == user
